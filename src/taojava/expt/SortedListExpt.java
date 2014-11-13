@@ -7,7 +7,6 @@ import taojava.util.SortedList;
 /**
  * Some simple experiments with sorted lists.  Intended as helpers
  * for experiments with particular implementations of sorted lists.
- *
  * @author Samuel A. Rebelsky
  */
 public class SortedListExpt
