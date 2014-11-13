@@ -19,6 +19,9 @@ import java.util.Random;
  * Implementations done here were highly motivated by
  * discussions with Yazan Kittaneh <kittaneh17 @grinnell.edu>
  * Zoe Wolter <wolterzo@grinnell.edu> and Ameer Shujjah  <shujjah@grinnell.edu>
+ * 
+ * Compared get(i) implementation with that of Patrick Slough's
+ *  <sloughPa@grinnell.edu>
  * Online resources consulted include:
  *  http://en.literateprograms.org/Skip_list_(Java)
  */
@@ -261,6 +264,7 @@ public class SkipList<T extends Comparable<T>>
       }//for
     }//else
     this.mods++;
+    this.size++;
   } // add(T val)
 
   /**
@@ -338,9 +342,18 @@ public class SkipList<T extends Comparable<T>>
    *   if the index is out of range (index < 0 || index >= length)
    */
   public T get(int i)
-  {
-    // STUB
-    return null;
+  { 
+    if ((i < 0) || (i > this.size))
+      {
+       throw new IndexOutOfBoundsException();
+      }//check bounds
+    
+    Node <T> current = this.head.forwardPointers[0];
+    int counter =0 ;
+    while(counter < i){
+      current = current.forwardPointers[0];
+    }//while
+    return current.val;
   } // get(int)
 
   /**
@@ -348,7 +361,6 @@ public class SkipList<T extends Comparable<T>>
    */
   public int length()
   {
-    
     return this.size;
   } // length()
 
