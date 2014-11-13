@@ -6,3 +6,76 @@ The text below is in response to the assignment found at :
 http://www.cs.grinnell.edu/~rebelsky/Courses/CSC207/2014F/assignments/current.html
 
 
+SortedArrayList results:
+=================================================================
+
+            add/1   index iterate   add/2   rem/1   rem/2   total
+Round  0       61       4      10     142     255      76     472
+Round  1       42       4       3     145     240      79     434
+Round  2       44       1       0     125     205      68     375
+Round  3       43       1       0     133     220      65     397
+Round  4       37       1       0     121     226      78     385
+Round  5       38       1       0     123     221      67     383
+Round  6       38       1       0     123     201      66     363
+Round  7       38       1       0     129     247      87     415
+Round  8       47       1       0     136     239      66     423
+Round  9       38       0       1     138     239      80     416
+Round 10       43       1       0     128     214      72     386
+Round 11       40       0       1     127     225      77     393
+Round 12       39       1       0     130     204      65     375
+Round 13       37       1       0     125     220      67     383
+Round 14       39       2       0     129     231      72     401
+Round 15       45       1       1     127     228      78     402
+Round 16       43       1       0     131     228      79     403
+Round 17       44       1       0     142     205      66     392
+Round 18       38       1       0     127     236      74     402
+Round 19       37       1       0     118     227      75     383
+Average        41       1       0     129     225      72     399
+
+
+
+skipList results:
+=================================================================
+             add/1   index iterate   add/2   rem/1   rem/2   total
+Round  0       68       0       8      68      72      22     216
+Round  1       51       0       5      71      37      13     164
+Round  2       25       0       3      42      27       9      97
+Round  3       27       0       2      50      29      10     108
+Round  4       22       0       3      42      26       8      93
+Round  5       30       0       3      49      28      10     110
+Round  6       31       0       3      66      28      10     128
+Round  7       28       0       3      49      30       5     110
+Round  8       22       0       3      44      25       9      94
+Round  9       30       0       3      45      27      10     105
+Round 10       24       0       2      42      26       8      94
+Round 11       31       0       3      46      27      11     107
+Round 12       24       0       3      48      26       9     101
+Round 13       33       0       2      48      29       9     110
+Round 14       24       0       2      42      24       8      92
+Round 15       44       0       3      51      30       9     128
+Round 16       24       0       2      51      30      11     107
+Round 17       31       0       3      50      32      12     116
+Round 18       29       0       2      46      34      11     111
+Round 19       35       0       2      54      33      12     124
+Average        31       0       3      50      31      10     115
+
+
+ANALYSIS
+===================================================================
+	Overall we realize that the average time taken to add a set elements , for 
+the first time,  to a skipList is about 20% less than the time taken
+to add a set of elements for the SortedArrayList.
+	The more dramatic result was noticed when the second set of elements were
+added to both list. We observe that it took the skipList implementation about 
+2.5 times less time that it took the SortedArrayList implementation. In adding the
+second set, each individual element has to be inserted in place in the original list.
+This implies that we would have to search firstly for where an element fits and the place
+that element at that position.Ths then implies that whichever algorithm is faster in terms 
+of searching will overall have the shortest time to add, which therefore explains why our 
+skipList implementation performed better than the SortedArrayList implementation.
+	Furthermore, the time taken to remove the first set of elements was about 22 times 
+less for the skipList implementation as compared to the SortedArrayList implementation.
+The remove method for both implementation requires that we specify a particular element to 
+remove. Again this implies that we must search through our entire list first, and then remove
+the particular element. This again suggests that the skipList implementation would perform better
+than the  SortedArrayList.
