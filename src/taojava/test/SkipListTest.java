@@ -17,5 +17,6 @@ extends SortedListTest
   {
     this.ints = new SkipList<Integer>();
     this.strings = new SkipList<String>();
+    this.duplicationAllowed = false;
   } // setup
 } // SkipListTest
