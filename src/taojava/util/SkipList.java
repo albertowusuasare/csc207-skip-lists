@@ -1,6 +1,6 @@
 package taojava.util;
 
-import java.security.NoSuchAlgorithmException;
+
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -54,6 +54,7 @@ public class SkipList<T extends Comparable<T>>
   /**
    * Nodes for skip lists.
    */
+  @SuppressWarnings("hiding")
   public class Node <T> 
   {
     // +--------+--------------------------------------------------------
@@ -82,8 +83,8 @@ public class SkipList<T extends Comparable<T>>
       // we will use index 1 to nodeLevel for our forward pointers
       this.forwardPointers = new Node[nodeLevel+1]; 
       //initialize all the pointers to null upon creation
-      for(Node<T> nodeRef : forwardPointers){
-        nodeRef = null;
+      for(int i =0; i < nodeLevel;i++){
+        this.forwardPointers = null;
       }//for   
     }//Node(int, T) 
   } // class Node
@@ -96,7 +97,6 @@ public class SkipList<T extends Comparable<T>>
   /**
    * Constructs a new SkipList using default maximum number of levels.
    */
-  @SuppressWarnings("unchecked")
   public SkipList(){
     this(20);
   }//SkipList()
@@ -105,7 +105,6 @@ public class SkipList<T extends Comparable<T>>
    * Constructs a new SkipList using a maximum number of levels.
    * @param maxLevel the maximum level for the list
    */
-  @SuppressWarnings("unchecked")
   public SkipList(int maxLevel){
     this(maxLevel,0.5);
   }//SkipList(int)
@@ -115,24 +114,18 @@ public class SkipList<T extends Comparable<T>>
    * @param maxLevel the maximum number of levels in the skip List
    * @param probability the probability used in assinging random levels
    */
-  @SuppressWarnings("unchecked")
   public SkipList(int maxLevel,double probability){
     this.currentLevel = 0;
     this.probability = probability;
     this.MAX_LEVEL =  maxLevel;
-    this.head = new Node(this.MAX_LEVEL,null);
-    this.tail = new Node(this.MAX_LEVEL,null);
+    this.head = new Node<T>(this.MAX_LEVEL,null);
+    this.tail = new Node<T>(this.MAX_LEVEL,null);
     setHeadToTail(this.head, this.tail);
   };//SkipList(int, double)
   
 
 
-  @SuppressWarnings("unchecked")
-  // +-------------------------+-----------------------------------------
-  // | Internal Helper Methods |
-  // +-------------------------+
-  
-  void setHeadToTail(Node head, Node tail){
+  void setHeadToTail(Node<T> head, Node<T> tail){
    //set tail forward pointers to null and set
     // head forward pointers to tail Node
     for(int i = 0; i< this.MAX_LEVEL; i++){
@@ -244,10 +237,13 @@ public class SkipList<T extends Comparable<T>>
       update[i] = active;
     }//for
     
+    //reset active
     active = active.forwardPointers[0];
-    if(active.val.compareTo(val) == 0){
+    
+    if(active!= null && active.val.compareTo(val) == 0){
       return;
     }//if current val equal to val
+    
     else{
       int newLevel = randomLevel();
       if(newLevel > this.currentLevel){
@@ -255,15 +251,16 @@ public class SkipList<T extends Comparable<T>>
           update[i] = this.head;
         }//for
         this.currentLevel = newLevel;
-      }//if new level greter than current list level
+      }//if new level greater than current list level
       
       //insert new node
-      active = new Node(newLevel,val);
-      for(i = 1; i <= newLevel; i++){
+      active = new Node<T>(newLevel,val);
+      for(i = 0; i <= newLevel; i++){
         active.forwardPointers[i] = update[i].forwardPointers[i];
         update[i].forwardPointers[i]= active;
       }//for
     }//else
+    this.mods++;
   } // add(T val)
 
   /**
@@ -273,14 +270,16 @@ public class SkipList<T extends Comparable<T>>
   public boolean contains(T searchVal)
   {
    Node<T> active = this.head; //point active pointer to the head
-   int index;
+   int i;
    
-   for(index = this.currentLevel; index >= 1; index--){
-     while(active.forwardPointers[index].val.compareTo(searchVal) < 0){
-       active = active.forwardPointers[index];
+   for(i = this.currentLevel; i >= 0; i--){
+     while((active.forwardPointers[i] != null) &&
+         active.forwardPointers[i].val.compareTo(searchVal) < 0){
+       active = active.forwardPointers[i];
      }//while
    }//for
-   active = active.forwardPointers[1];
+   
+   active = active.forwardPointers[0];
    return (active.val.compareTo(searchVal) == 0);
   } // contains(T)
 
@@ -294,37 +293,40 @@ public class SkipList<T extends Comparable<T>>
   @SuppressWarnings("unchecked")
   public void remove(T val)
   {
-    Node<T> [] update = new Node[this.MAX_LEVEL+1];
+    Node<T> [] update = new Node[this.MAX_LEVEL];
     Node<T> active = this.head;
     //find and record update array
-    int index;
-    for(index = this.currentLevel; index >= 0; index --){
-      while(active.forwardPointers[index].val.compareTo(val) < 0){
-        active = active.forwardPointers[index];
+    int i;//loop variable
+    for(i = this.currentLevel; i >= 0; i --){
+      while((active.forwardPointers[i] !=null)
+          && active.forwardPointers[i].val.compareTo(val) < 0){
+        active = active.forwardPointers[i];
       }//while
-      
-      update[index] = active;
+      update[i] = active;
     }//for 
     
     active = active.forwardPointers[0];
     
-    if(active.val.compareTo(val) ==0){
-      for(index=0;index <= this.currentLevel; index++){
-        if(update[index].forwardPointers[index] != active ){
+    if(active !=null && 
+        active.val.compareTo(val) ==0){
+      for(i=0;i <= this.currentLevel; i++){
+        if(update[i].forwardPointers[i] != active )
           break;
-        }//if
-        update[index].forwardPointers[index] = active.forwardPointers[index];
+        update[i].forwardPointers[i] = active.forwardPointers[i];
       }//for
-      
       active = null; //allow to be freed by garbage collector
       
-      while(this.currentLevel >1 && 
+      while(this.currentLevel >0 && 
           this.head.forwardPointers[this.currentLevel] == null){
             this.currentLevel--;
           }//while
+      this.mods++;
+      this.size --;
     }//if  
   } // remove(T)
 
+  
+  
   // +--------------------------+----------------------------------------
   // | Methods from SemiIndexed |
   // +--------------------------+
