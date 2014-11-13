@@ -1,6 +1,9 @@
 package taojava.util;
 
+import java.security.NoSuchAlgorithmException;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 /**
@@ -8,6 +11,16 @@ import java.util.Random;
  * 
  * @author Samuel A. Rebelsky
  * @author Albert Owusu-Asare
+ * 
+ */
+
+/*
+ * Citations:
+ * Implementations done here were highly motivated by
+ * discussions with Yazan Kittaneh <kittaneh17 @grinnell.edu>
+ * Zoe Wolter <wolterzo@grinnell.edu> and Ameer Shujjah  <shujjah@grinnell.edu>
+ * Online resources consulted include:
+ *  http://en.literateprograms.org/Skip_list_(Java)
  */
 public class SkipList<T extends Comparable<T>>
     implements SortedList<T>
@@ -15,13 +28,24 @@ public class SkipList<T extends Comparable<T>>
   // +--------+----------------------------------------------------------
   // | Fields |
   // +--------+
-  
-  int currentLevel; // the level  of the node
-  int size; //size of the list
+ 
+  //the maximum level of the list
+  int MAX_LEVEL; 
+  //the  current level number of the list
+  int currentLevel; 
+  //size of the list
+  int size; 
+  //Probability used in calculating random level
   double probability;
-  int MAX_LEVEL;  //the level of the list
-  Node<T> header;  // the front of the list stores references to all the 
-  //different levels from 1 to MaxLevel
+  //tracks modifications to the list
+  int mods = 0; 
+ 
+  //the front of the list stores references to all the 
+ //different levels from 0 to MaxLevel
+  Node<T> head; 
+  // the tail end of the list
+  Node<T> tail;
+  
   
   // +------------------+------------------------------------------------
   // | Internal Classes |
@@ -41,11 +65,12 @@ public class SkipList<T extends Comparable<T>>
      */
     T val;
     
+    /**
+     *  Array of forward pointers
+     */
     Node <T> [] forwardPointers;
     
-    // +--------------+----------------------------------------------------
-    // | Constructors |
-    // +--------------+
+ 
     /**
      * Constructs a new node
      * @param nodeLevel the level this node is at.
@@ -67,71 +92,69 @@ public class SkipList<T extends Comparable<T>>
   // +--------------+----------------------------------------------------
   // | Constructors |
   // +--------------+
-  /**
-   * Constructs a new SkipList 
-   * @param maxLevel the maximum number of levels in the skip List
-   */
-  @SuppressWarnings("unchecked")
-  public SkipList(int maxLevel){
-    this.currentLevel = 1 ;
-    this.MAX_LEVEL =  maxLevel;
-    this.header = new Node(this.MAX_LEVEL,null);
-    this.probability = 0.5;
- 
-   // this.header = new Node [this.MAX_LEVEL + 1];
-    //setHeader(this.header);
-  };//SkipList()
   
   /**
    * Constructs a new SkipList using default maximum number of levels.
    */
   @SuppressWarnings("unchecked")
   public SkipList(){
-    this.MAX_LEVEL = 20;
-    this.currentLevel = 1;  
-   // this.header = new Node[this.MAX_LEVEL + 1];
-    this.header = new Node(this.MAX_LEVEL,null);
-    this.probability = 0.5;
-    //setHeader(this.header);
+    this(20);
   }//SkipList()
+  
+  /**
+   * Constructs a new SkipList using a maximum number of levels.
+   * @param maxLevel the maximum level for the list
+   */
+  @SuppressWarnings("unchecked")
+  public SkipList(int maxLevel){
+    this(maxLevel,0.5);
+  }//SkipList(int)
+  
+  /**
+   * Constructs a new SkipList using  a given probability and maximum length.
+   * @param maxLevel the maximum number of levels in the skip List
+   * @param probability the probability used in assinging random levels
+   */
+  @SuppressWarnings("unchecked")
+  public SkipList(int maxLevel,double probability){
+    this.currentLevel = 0;
+    this.probability = probability;
+    this.MAX_LEVEL =  maxLevel;
+    this.head = new Node(this.MAX_LEVEL,null);
+    this.tail = new Node(this.MAX_LEVEL,null);
+    setHeadToTail(this.head, this.tail);
+  };//SkipList(int, double)
+  
+
 
   @SuppressWarnings("unchecked")
   // +-------------------------+-----------------------------------------
   // | Internal Helper Methods |
   // +-------------------------+
   
-  void setHeader(Node [] head){
-    int index = 1;
-    
-    //set forward pointers of head 
-    for(; index<= head.length; index++){
-      if(index<= this.currentLevel){
-      head[index] = new Node(index, null);
-      }//if
-      else{
-        head[index] = null;
-      }//else
-    }//for
-  }// setHeader()
-  
+  void setHeadToTail(Node head, Node tail){
+   //set tail forward pointers to null and set
+    // head forward pointers to tail Node
+    for(int i = 0; i< this.MAX_LEVEL; i++){
+     tail.forwardPointers[i] = null;
+     head.forwardPointers[i] = tail;
+   }//for
+  }// setHeadToTail(Node, Node)
   
   /**
    * Determines a random level for a node
    */
   public  int randomLevel(){
-    int newLevel = 1;
-    
-    //returns a random value between 0 and 1
+    int newLevel = 0;
     Random generator = new Random();
-    double random = generator.nextDouble();
-
-    while (random < this.probability){
+  
+    while (generator.nextDouble() < this.probability){
       newLevel++;
-      random = generator.nextDouble(); //spit out another value
     }//while random < probability
-    return Math.min(this.MAX_LEVEL, newLevel);
-  }
+    return Math.min(this.MAX_LEVEL-1, newLevel);
+  }// randomLevel
 
+  
   // +-----------------------+-------------------------------------------
   // | Methods from Iterable |
   // +-----------------------+
@@ -143,23 +166,51 @@ public class SkipList<T extends Comparable<T>>
    */
   public Iterator<T> iterator()
   {
-    // STUB
+    
     return new Iterator<T>(){
 
+      //Fields 
+      Node<T> cursor = SkipList.this.head;
+      int mods = SkipList.this.mods;
+      
+      //Helper method
+      /**
+       * Checks if the list has been updated since <code>this</code> Iterator
+       * was modified
+       */
+      
+      void failFast(){
+        if(this.mods != SkipList.this.mods)
+          throw new ConcurrentModificationException();
+      }//failFast()
+      
       @Override
       public boolean hasNext()
       {
-        // TODO Auto-generated method stub
-        return false;
-      }
+          failFast();
+         return this.cursor.forwardPointers[0].val != null; 
+      }//hasNext()
 
       @Override
       public T next()
       {
-        // TODO Auto-generated method stub
-        return null;
-      }
+        failFast();
+        //check if there is actually a next value
+        if(!this.hasNext()){
+          throw new NoSuchElementException();
+        }//if no next value
+        this.cursor = this.cursor.forwardPointers[0];
+        return  this.cursor.val;
+      }//next()
       
+      @Override
+      public void remove(){
+  
+        // move to the position right before the current cur
+        failFast();
+        SkipList.this.remove(this.cursor.val);
+        SkipList.this.size --;
+      }//remove() 
     };
   } // iterator()
 
@@ -178,18 +229,19 @@ public class SkipList<T extends Comparable<T>>
   public void add(T val)
   {
    // An array of pointer to nodes that we should update
-    Node<T>[] update = new Node[this.MAX_LEVEL+1];
-    Node<T> active = this.header;
-    int index;
+    Node<T>[] update = new Node[this.MAX_LEVEL];
+    Node<T> active = this.head;
     
+    int i;
+ 
     //find and record all the updates
-    for(index = this.currentLevel; index >= 1; index--){
-      while(active.forwardPointers[index].val.compareTo(val) < 0){
-        active = active.forwardPointers[index];
+    for(i = this.currentLevel; i >= 0; i--){
+      while((active.forwardPointers[i] != null) &&
+          active.forwardPointers[i].val.compareTo(val) < 0){
+        active = active.forwardPointers[i];
       }//while
-      
       //update
-      update[index] = active;
+      update[i] = active;
     }//for
     
     active = active.forwardPointers[0];
@@ -199,17 +251,17 @@ public class SkipList<T extends Comparable<T>>
     else{
       int newLevel = randomLevel();
       if(newLevel > this.currentLevel){
-        for(index= this.currentLevel+ 1; index <= newLevel; index++ ){
-          update[index] = this.header;
+        for(i= this.currentLevel+ 1; i <= newLevel; i++ ){
+          update[i] = this.head;
         }//for
         this.currentLevel = newLevel;
       }//if new level greter than current list level
       
       //insert new node
       active = new Node(newLevel,val);
-      for(index = 1; index <= newLevel; index++){
-        active.forwardPointers[index] = update[index].forwardPointers[index];
-        update[index].forwardPointers[index]= active;
+      for(i = 1; i <= newLevel; i++){
+        active.forwardPointers[i] = update[i].forwardPointers[i];
+        update[i].forwardPointers[i]= active;
       }//for
     }//else
   } // add(T val)
@@ -220,7 +272,7 @@ public class SkipList<T extends Comparable<T>>
    */
   public boolean contains(T searchVal)
   {
-   Node<T> active = this.header; //point active pointer to the head
+   Node<T> active = this.head; //point active pointer to the head
    int index;
    
    for(index = this.currentLevel; index >= 1; index--){
@@ -243,7 +295,7 @@ public class SkipList<T extends Comparable<T>>
   public void remove(T val)
   {
     Node<T> [] update = new Node[this.MAX_LEVEL+1];
-    Node<T> active = this.header;
+    Node<T> active = this.head;
     //find and record update array
     int index;
     for(index = this.currentLevel; index >= 0; index --){
@@ -267,7 +319,7 @@ public class SkipList<T extends Comparable<T>>
       active = null; //allow to be freed by garbage collector
       
       while(this.currentLevel >1 && 
-          this.header.forwardPointers[this.currentLevel] == null){
+          this.head.forwardPointers[this.currentLevel] == null){
             this.currentLevel--;
           }//while
     }//if  
