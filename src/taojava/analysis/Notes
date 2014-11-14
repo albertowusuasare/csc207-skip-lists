@@ -1,0 +1,34 @@
+Author: Albert Owusu-Asare
+
+This file contains notes I take during the course of solving the problem 
+ 
+ 
+ Extra credit:
+ Made sure tests support the two different 'add' implementation possible. (duplication/no duplication)
+ 
+
+Part Five: Reflect
+
+1.) Syntax : <T extends Comparable<T>>
+I have learnt that this syntax is very important whenever we want to ensure that the generic type(T)
+we want to use in our program is comparable to itself. This might be critical in a program that depends
+a lot on objects others with other same type objects.
+
+2) Multiple inheritance eg. as seen with public interface SortedList<T extends Comparable<T>>
+    extends Iterable<T>, SimpleSet<T>, SemiIndexed<T> 
+    
+I have learned and appreciated that in our design of our programs, we may want to nest various  different 
+abstract characteristics as one main interface.Such a scheme is important because it enables objects
+ created from final interface to belong to multiple types. However in our case we were more interested in 
+ adding new abstract characteristic to our SortedList interface than the notion of extending its types.
+ Java does not support multiple class inheritance so unfortunately inheriting interfaces might be the
+ only way to achieve some type of multi-inheritance.
+
+3) One part of the assignment I found interesting was the timer. The SimpleTimer class enabled us to 
+calculate the time it took to perform experiments on our lists. The timer works by using the current time
+of our system. We start,stop pause and reset the time using the methods start(),stop() pause(), reset(). For 
+instance to find the time taken to run a method. We will surround the the method call with start() and stop()
+and calculate the time elapsed. We might want to make the timing a bit more fine grained such that the time 
+in between calling the timer functions and calling the actual functions are accounted for. I am not sure at the moment
+exactly how that might be done
+
