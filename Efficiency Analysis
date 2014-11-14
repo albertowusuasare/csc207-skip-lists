@@ -67,8 +67,8 @@ the first time,  to a skipList is about 20% less than the time taken
 to add a set of elements for the SortedArrayList.
 	The more dramatic result was noticed when the second set of elements were
 added to both list. We observe that it took the skipList implementation about 
-2.5 times less time that it took the SortedArrayList implementation. In adding the
-second set, each individual element has to be inserted in place in the original list.
+2.5 times less time that it took the SortedArrayList implementation. In adding 
+the second set, each individual element has to be inserted in place in the original list.
 This implies that we would have to search firstly for where an element fits and the place
 that element at that position.Ths then implies that whichever algorithm is faster in terms 
 of searching will overall have the shortest time to add, which therefore explains why our 
@@ -78,4 +78,16 @@ less for the skipList implementation as compared to the SortedArrayList implemen
 The remove method for both implementation requires that we specify a particular element to 
 remove. Again this implies that we must search through our entire list first, and then remove
 the particular element. This again suggests that the skipList implementation would perform better
-than the  SortedArrayList.
+than the  SortedArrayList. Moreover, the huge magnitude difference in executing times 
+can be explained by the slow process of removing in an SortedArrayList. To remove an element at
+ an index we have to shift everything over in order to preserve the notion of "indexes". 
+ Shifting is expensive and the time taken to shift is even more exaggerated with larger lists.
+    Though our data above does not incorporate indexing in the sortedList,
+ One may infer that indexing in the SortedArrayList will faster be faster because such indexing simply
+ utilizes pointer addition in memory unlike for skipLists, where several node's are scattered all about
+ in memory.
+  To conclude, I believe it is reasonable to consider SortedArrayLists, if we care very much about 
+  how fast we can access elements(eg querying a huge database that remains fairly constant for sometime). 
+  For other situations where we will be making a lot of insertions and deletions to our lists we might wanna 
+  use skipLists instead.
+

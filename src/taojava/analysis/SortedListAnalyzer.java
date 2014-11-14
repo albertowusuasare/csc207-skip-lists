@@ -56,10 +56,12 @@ public class SortedListAnalyzer
 
     // Index
     indices.start();
+    /*
     for (int i = 0; i < n; i++)
       {
         sl.get(random.nextInt(len));
       } // for
+      */
     indices.stop();
 
     // Iterate
