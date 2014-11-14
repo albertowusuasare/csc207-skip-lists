@@ -207,8 +207,6 @@ public class SkipList<T extends Comparable<T>>
               throw new NoSuchElementException();
             }//if no next value
           this.cursor = this.cursor.forwardPointers[0];
-          this.mods++;
-          SkipList.this.mods++;
           return this.cursor.val;
 
         }//next()
@@ -220,7 +218,6 @@ public class SkipList<T extends Comparable<T>>
           failFast();
           SkipList.this.remove(this.cursor.val);
           this.mods++;
-          SkipList.this.mods++;
           SkipList.this.size--;
         }//remove() 
       };
